@@ -1,32 +1,33 @@
 #[macro_use]
 extern crate clap;
 
+use std::io;
 use std::io::prelude::*;
 use std::net::{IpAddr, SocketAddr, TcpListener, TcpStream};
-use std::io;
 
 fn main() {
-    let matches = clap_app!(rcat => 
+    let matches = clap_app!(rcat =>
         (version: "1.0")
         (author: "Eliott Teissonniere <eliott.teissonniere.org>")
         (about: "Tiny netcat like program in rust")
         (@arg PORT: -p --port +takes_value "Port to connect to or listen on")
         (@arg ADDR: -a --address +takes_value "Address to connect to or listen on")
-        (@subcommand listen => 
+        (@subcommand listen =>
             (about: "Listen for incoming connections on specified address and port")
         )
         (@subcommand connect =>
             (about: "Connect to specified address and port")
         )
-    ).get_matches();
+    )
+    .get_matches();
 
     let addr = matches.value_of("ADDR").unwrap_or("127.0.0.1");
     let port: u16 = matches.value_of("PORT").unwrap_or("4242").parse().unwrap();
-    
-    if let Some(_) = matches.subcommand_matches("listen") {
+
+    if matches.subcommand_matches("listen").is_some() {
         println!("Listening on {}:{}", addr, port);
         listen(addr, port);
-    } else if let Some(_) = matches.subcommand_matches("connect") {
+    } else if matches.subcommand_matches("connect").is_some() {
         println!("Connecting to {}:{}", addr, port);
         connect(addr, port);
     } else {
@@ -54,27 +55,29 @@ fn connect(addr: &str, port: u16) {
 
 fn listen(addr: &str, port: u16) {
     match TcpListener::bind((addr, port)) {
-		Ok(listener) => {
-			for stream in listener.incoming() {
-				let stream = stream.unwrap();
-				handle_connection(stream);
-			}
-		},
-		Err(e) => {println!("Error: {}", e)}
-	}
+        Ok(listener) => {
+            for stream in listener.incoming() {
+                let stream = stream.unwrap();
+                handle_connection(stream);
+            }
+        }
+        Err(e) => println!("Error: {}", e),
+    }
 }
 
-fn handle_connection(mut stream: TcpStream){
-	loop {
-		let mut buffer = [0; 512];
-		match stream.read(&mut buffer) {
-			Ok(s) => {
-				if s == 0 { return }
+fn handle_connection(mut stream: TcpStream) {
+    loop {
+        let mut buffer = [0; 512];
+        match stream.read(&mut buffer) {
+            Ok(s) => {
+                if s == 0 {
+                    return;
+                }
 
-				let received = String::from_utf8_lossy(&buffer[..]);
-				print!("<<< {}", received);
-			},
-			Err(e) => {println!("Error: {}", e)}
-		}
-	}
+                let received = String::from_utf8_lossy(&buffer[..]);
+                print!("<<< {}", received);
+            }
+            Err(e) => println!("Error: {}", e),
+        }
+    }
 }
