@@ -15,11 +15,14 @@ fn main() {
             (about: "Connect to specified address and port")
         )
     ).get_matches();
+
+    let addr = matches.value_of("ADDR").unwrap_or("127.0.0.1");
+    let port: u32 = matches.value_of("PORT").unwrap_or("4242").parse().unwrap();
     
     if let Some(_) = matches.subcommand_matches("listen") {
-        println!("Listening on {}:{}", matches.value_of("ADDR").unwrap_or("127.0.0.1"), matches.value_of("PORT").unwrap_or("4242"))
+        println!("Listening on {}:{}", addr, port)
     } else if let Some(_) = matches.subcommand_matches("connect") {
-        println!("Connecting to {}:{}", matches.value_of("ADDR").unwrap_or("127.0.0.1"), matches.value_of("PORT").unwrap_or("4242"))
+        println!("Connecting to {}:{}", addr, port)
     } else {
         println!("Unknown command")
     }
