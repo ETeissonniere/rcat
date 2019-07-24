@@ -2,7 +2,7 @@
 extern crate clap;
 
 use std::io::prelude::*;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, TcpStream};
+use std::net::{IpAddr, SocketAddr, TcpListener, TcpStream};
 use std::io;
 
 fn main() {
@@ -38,12 +38,14 @@ fn connect(addr: &str, port: u16) {
     let socket = SocketAddr::new(IpAddr::V4(addr.parse().unwrap()), port);
     if let Ok(mut stream) = TcpStream::connect(&socket) {
         loop {
-            let mut input = String::new();
             print!("> ");
-            io::stdin().read_line(&mut input).unwrap(); // Unwrap is used to ensure no errors occured
-            println!(">>> {}", input.trim());
+            let _ = io::stdout().flush();
 
-            stream.write(input.as_bytes()).unwrap(); // Same for unwrap
+            let mut input = String::new();
+            let _ = io::stdin().read_line(&mut input);
+
+            println!(">>> {}", input.trim());
+            let _ = stream.write(input.as_bytes());
         }
     } else {
         println!("Failure to connect to the target");
